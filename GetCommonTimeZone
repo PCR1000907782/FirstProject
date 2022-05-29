@@ -1,0 +1,69 @@
+function Get-CommonTimeZone{
+
+<#
+.SYNOPSIS
+    Returns information about the world time zones.
+
+.DESCRIPTION
+    Get-CommonTimeZone is a function that returns a information 
+    about the world time zones.
+
+.PARAMETER Name
+    Name of the timezones.
+
+.PARAMETER Offset
+    The value should be in between -12 to 12.
+
+.EXAMPLE
+     Get-CommonTimeZone -Name Central
+
+.EXAMPLE
+     Get-CommonTimeZone -Offset 11
+
+.NOTES
+    Author:  Prachi Khanna
+    
+#>
+    [CmdletBinding()]
+    param(
+            [Parameter(Mandatory=$False, ParameterSetName="Name")]
+            $Name,
+            [Parameter(Mandatory=$False, ParameterSetName="Offset")]
+            [Validaterange(-12,12)]$Offset
+  
+          )
+    Try
+    {
+        #Checking Security Protocol Type
+        $SecurityProtocolType=[Net.ServicePointManager]::SecurityProtocol
+        if($SecurityProtocolType -ne "Tls12")
+        {
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        }
+        #Github url
+        $URL = "https://raw.githubusercontent.com/dmfilipenko/timezones.json/master/timezones.json"
+        #Fetching data from Github 
+        $JsonData=Invoke-WebRequest -Uri $Url 
+        #Converted data 
+        $ConvertedReadableData = ConvertFrom-Json $JsonData.content
+        if($Name)
+        {
+            $ConvertedReadableData | Where-Object {$_.value -like "*$name*"} |ft
+        }
+        elseif($Offset)
+        {
+            $ConvertedReadableData | Where-Object {$_.offset -eq $Offset}|ft
+        }
+        else
+        {
+            $ConvertedReadableData |ft
+        }
+ }
+ Catch
+ {
+   $_.exception.message
+ }
+
+
+
+}
